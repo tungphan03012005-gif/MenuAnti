@@ -1,0 +1,323 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+
+--// ===== CÀI ĐẶT =====
+getgenv().WalkSpeedValue = 40
+local FallDamageEnabled = false
+local WalkSpeedEnabled = false
+local InfJumpEnabled = false
+local AntiAcidEnabled = false
+local AntiGravityEnabled = false
+local AntiSitEnabled = false
+local antiSitConnection = nil
+
+--// ===== TẠO GUI =====
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MainMenu"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = game:GetService("CoreGui")
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 320, 0, 440)
+Main.Position = UDim2.new(0.5, -160, 0.5, -220)
+Main.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Draggable = true
+Main.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = Main
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(80, 80, 100)
+UIStroke.Thickness = 1.5
+UIStroke.Parent = Main
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+Title.Text = "  MENU TỔNG HỢP"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Main
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = Title
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 14
+CloseBtn.Parent = Title
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseBtn
+
+CloseBtn.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
+-- Container
+local Container = Instance.new("ScrollingFrame")
+Container.Size = UDim2.new(1, -20, 1, -55)
+Container.Position = UDim2.new(0, 10, 0, 45)
+Container.BackgroundTransparency = 1
+Container.ScrollBarThickness = 4
+Container.CanvasSize = UDim2.new(0, 0, 0, 750) -- Tăng CanvasSize để chứa đầy đủ tất cả các nút
+Container.Parent = Main
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Padding = UDim.new(0, 8)
+ListLayout.Parent = Container
+
+--// ===== HÀM TẠO NÚT =====
+local function CreateToggle(name, callback)
+	local Frame = Instance.new("Frame")
+	Frame.Size = UDim2.new(1, 0, 0, 40)
+	Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+	Frame.Parent = Container
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 8)
+	Corner.Parent = Frame
+
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(1, -60, 1, 0)
+	Label.Position = UDim2.new(0, 12, 0, 0)
+	Label.BackgroundTransparency = 1
+	Label.Text = name
+	Label.TextColor3 = Color3.fromRGB(230, 230, 230)
+	Label.Font = Enum.Font.Gotham
+	Label.TextSize = 14
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Frame
+
+	local Toggle = Instance.new("TextButton")
+	Toggle.Size = UDim2.new(0, 45, 0, 24)
+	Toggle.Position = UDim2.new(1, -55, 0.5, -12)
+	Toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+	Toggle.Text = ""
+	Toggle.Parent = Frame
+
+	local ToggleCorner = Instance.new("UICorner")
+	ToggleCorner.CornerRadius = UDim.new(1, 0)
+	ToggleCorner.Parent = Toggle
+
+	local Circle = Instance.new("Frame")
+	Circle.Size = UDim2.new(0, 18, 0, 18)
+	Circle.Position = UDim2.new(0, 3, 0.5, -9)
+	Circle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	Circle.Parent = Toggle
+
+	local CircleCorner = Instance.new("UICorner")
+	CircleCorner.CornerRadius = UDim.new(1, 0)
+	CircleCorner.Parent = Circle
+
+	local enabled = false
+
+	Toggle.MouseButton1Click:Connect(function()
+		enabled = not enabled
+		if enabled then
+			TweenService:Create(Toggle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 180, 100)}):Play()
+			TweenService:Create(Circle, TweenInfo.new(0.2), {Position = UDim2.new(1, -21, 0.5, -9)}):Play()
+		else
+			TweenService:Create(Toggle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 70)}):Play()
+			TweenService:Create(Circle, TweenInfo.new(0.2), {Position = UDim2.new(0, 3, 0.5, -9)}):Play()
+		end
+		callback(enabled)
+	end)
+
+	return Frame
+end
+
+local function CreateButton(name, callback)
+	local Btn = Instance.new("TextButton")
+	Btn.Size = UDim2.new(1, 0, 0, 40)
+	Btn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+	Btn.Text = name
+	Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Btn.Font = Enum.Font.GothamSemibold
+	Btn.TextSize = 14
+	Btn.Parent = Container
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 8)
+	Corner.Parent = Btn
+
+	Btn.MouseButton1Click:Connect(callback)
+	return Btn
+end
+
+--// ===== CHỨC NĂNG =====
+
+-- 1. Fall Damage
+CreateToggle("Tắt Fall Damage", function(state)
+	FallDamageEnabled = state
+	if state then
+		local success, err = pcall(function()
+			local RemoteConfigClient = require(game:GetService("ReplicatedStorage").ClientSystems.RemoteConfigClient.RemoteConfigClient)
+			local config = RemoteConfigClient.Get(true)
+			if config and config.Shared and config.Shared.DamageConfig then
+				config.Shared.DamageConfig.FallDamageMinDistance = math.huge
+				config.Shared.DamageConfig.FallDamageMinSpeed = math.huge
+				config.Shared.DamageConfig.FallDamageMaxSpeed = math.huge
+				config.Shared.DamageConfig.FallDamageRagdollThreshold = math.huge
+			end
+		end)
+		if not success then
+			warn("Fall Damage error:", err)
+		end
+	end
+end)
+
+-- 2. WalkSpeed
+CreateToggle("WalkSpeed (40)", function(state)
+	WalkSpeedEnabled = state
+	local char = LocalPlayer.Character
+	if char and char:FindFirstChild("Humanoid") then
+		if state then
+			char.Humanoid.WalkSpeed = getgenv().WalkSpeedValue
+			char.Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+				if WalkSpeedEnabled then
+					char.Humanoid.WalkSpeed = getgenv().WalkSpeedValue
+				end
+			end)
+		else
+			char.Humanoid.WalkSpeed = 16
+		end
+	end
+end)
+
+-- 3. Vô hạn nhảy (Inf Jump)
+CreateToggle("Vô hạn nhảy (Inf Jump)", function(state)
+	InfJumpEnabled = state
+	UserInputService.JumpRequest:Connect(function()
+		if InfJumpEnabled then
+			local char = LocalPlayer.Character
+			if char and char:FindFirstChildOfClass("Humanoid") then
+				char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+			end
+		end
+	end)
+end)
+
+-- 4. Anti Acid (On/Off)
+CreateToggle("Anti Acid", function(state)
+	AntiAcidEnabled = state
+	if state then
+		local success, err = pcall(function()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/tungphan03012005-gif/Anti-Acid/refs/heads/main/AntiAcid"))()
+		end)
+		if not success then
+			warn("Anti Acid error:", err)
+		end
+	end
+end)
+
+-- 5. Anti Gravity (On/Off)
+CreateToggle("Anti Gravity", function(state)
+	AntiGravityEnabled = state
+	if state then
+		local success, err = pcall(function()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/tungphan03012005-gif/Anti-Gravity/refs/heads/main/Anti%20Gravity"))()
+		end)
+		if not success then
+			warn("Anti Gravity error:", err)
+		end
+	end
+end)
+
+-- 6. Anti Sit (Smart Anti-Sit với On/Off)
+local function isNearRealSeat(hrp)
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if obj:IsA("Seat") or obj:IsA("VehicleSeat") then
+			if (obj.Position - hrp.Position).Magnitude <= 4.5 then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+CreateToggle("Anti Sit", function(state)
+	AntiSitEnabled = state
+	if state then
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "Smart Anti-Sit",
+			Text = "Đã bật: Chống ngồi bệt khi không có ghế!",
+			Duration = 3
+		})
+		
+		if antiSitConnection then
+			antiSitConnection:Disconnect()
+		end
+
+		antiSitConnection = RunService.RenderStepped:Connect(function()
+			if not AntiSitEnabled then return end
+			local character = LocalPlayer.Character
+			if not character then return end
+			
+			local hrp = character:FindFirstChild("HumanoidRootPart")
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+			
+			if hrp and humanoid and humanoid.Health > 0 then
+				if humanoid.Sit or humanoid:GetState() == Enum.HumanoidStateType.Sitting then
+					if not isNearRealSeat(hrp) then
+						humanoid.Sit = false
+						humanoid:ChangeState(Enum.HumanoidStateType.Running)
+						hrp.CFrame = hrp.CFrame + Vector3.new(0, 1, 0)
+					end
+				end
+			end
+		end)
+	else
+		if antiSitConnection then
+			antiSitConnection:Disconnect()
+			antiSitConnection = nil
+		end
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "Smart Anti-Sit",
+			Text = "Đã tắt chức năng Anti-Sit.",
+			Duration = 2
+		})
+	end
+end)
+
+-- 7. Airwalk
+CreateButton("Airwalk", function()
+	loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Airwalk-43305"))()
+end)
+
+-- 8. Fly
+CreateButton("Fly (Arceus X)", function()
+	loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\11c\110\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")()
+end)
+
+-- 9. Fake Lag
+CreateButton("Fake Lag", function()
+	loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Fake-Lag-(Universal)-227085"))()
+end)
+
+-- 10. Teleport Gui
+CreateButton("Teleport Gui", function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/GhostPlayer352/Test4/refs/heads/main/Teleport%20Gui"))()
+end)
+
+print("✅ Menu tổng hợp đã load thành công!")
